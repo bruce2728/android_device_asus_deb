@@ -18,13 +18,16 @@ TARGET_BOOTLOADER_BOARD_NAME := deb
 TARGET_BOOTLOADER_NAME := deb
 TARGET_BOARD_INFO_FILE := device/asus/deb/board-info.txt
 
-BOARD_LIB_DUMPSTATE := libdumpstate.deb
+BOARD_HAL_STATIC_LIBRARIES := libdumpstate.deb
 
 # TARGET_RECOVERY_UI_LIB := librecovery_ui_deb
 
 TARGET_RELEASETOOLS_EXTENSIONS := device/asus/deb
 
 TARGET_RECOVERY_FSTAB = device/asus/deb/recovery.fstab
+
+#Uncomment this for odex
+#WITH_DEXPREOPT := true
 
 -include vendor/asus/deb/BoardConfigVendor.mk
 include device/asus/flo/BoardConfigCommon.mk

@@ -15,3 +15,4 @@
 #
 
 add_lunch_combo aosp_deb-userdebug
+add_lunch_combo cm_deb-userdebug
