@@ -130,12 +130,13 @@ on boot
 
 # Assign TCP buffer thresholds to be ceiling value of technology maximums
 # Increased technology maximums should be reflected here.
-    write /proc/sys/net/core/rmem_max  1220608
-    write /proc/sys/net/core/wmem_max  1220608
+    write /proc/sys/net/core/rmem_max  2097152
+    write /proc/sys/net/core/wmem_max  2097152
 
 #Modify windows size to meet ATT requirement
     setprop net.tcp.buffersize.hspa    4094,87380,704512,4096,16384,262144
     setprop net.tcp.buffersize.lte     524288,1048576,2560000,262144,524288,1048576
+    setprop net.tcp.buffersize.wifi 524288,1048576,2560000,524288,1048576,2560000
 
 # msm specific files that need to be created on /data
 on post-fs-data
@@ -146,6 +147,9 @@ on post-fs-data
     mkdir /data/misc/wifi/sockets 0770 wifi wifi
     mkdir /data/misc/wifi/wpa_supplicant 0770 wifi wifi
     mkdir /data/misc/dhcp 0770 dhcp dhcp
+
+    # Apply correct labeling to DRM files
+    restorecon_recursive /data/misc/playready
 
     chown system system /dev/wcnss_wlan
     write /sys/module/wcnss_ssr_8960/parameters/enable_riva_ssr 1
@@ -200,6 +204,12 @@ on post-fs-data
     # Modify from 777 (for camera calibration) to 775
     chmod 775 /persist/camera_calibration
 
+    # Modify from 777 (for lightsensor) to 775
+    chmod 775 /persist/lightsensor
+
+    # Modify from 777 (for lightsensor calibration data) to 664
+    chmod 664 /persist/lightsensor/AL3010_Config.ini
+
     chmod 664 /persist/ssn
     chmod 664 /persist/60isn
 
@@ -236,7 +246,7 @@ on post-fs-data
     write /sys/module/rpm_resources/enable_low_power/pxo 1
     write /sys/module/rpm_resources/enable_low_power/vdd_dig 1
     write /sys/module/rpm_resources/enable_low_power/vdd_mem 1
-    write /sys/module/pm_8x60/modes/cpu0/retention/idle_enabled 1
+    write /sys/module/pm_8x60/modes/cpu0/retention/idle_enabled 0
     write /sys/module/pm_8x60/modes/cpu1/retention/idle_enabled 1
     write /sys/module/pm_8x60/modes/cpu2/retention/idle_enabled 1
     write /sys/module/pm_8x60/modes/cpu3/retention/idle_enabled 1
@@ -253,10 +263,6 @@ on post-fs-data
     write /sys/module/pm_8x60/modes/cpu2/standalone_power_collapse/idle_enabled 1
     write /sys/module/pm_8x60/modes/cpu3/standalone_power_collapse/idle_enabled 1
     write /sys/module/pm_8x60/modes/cpu0/power_collapse/idle_enabled 1
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor "ondemand"
-    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor "ondemand"
-    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor "ondemand"
-    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor "ondemand"
     write /sys/devices/system/cpu/cpufreq/ondemand/up_threshold 90
     write /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate 50000
     write /sys/devices/system/cpu/cpufreq/ondemand/io_is_busy 1
@@ -267,14 +273,33 @@ on post-fs-data
     write /sys/devices/system/cpu/cpufreq/ondemand/optimal_freq 918000
     write /sys/devices/system/cpu/cpufreq/ondemand/sync_freq 1026000
     write /sys/devices/system/cpu/cpufreq/ondemand/up_threshold_any_cpu_load 80
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 384000
-    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq 384000
-    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq 384000
-    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq 384000
     write /sys/devices/system/cpu/cpu1/online 1
     write /sys/devices/system/cpu/cpu2/online 1
     write /sys/devices/system/cpu/cpu3/online 1
     write /dev/cpuctl/apps/cpu.notify_on_migrate 1
+
+    # Hardware tunables
+    chown root system /sys/class/timed_output/vibrator/amp
+    chown root system /sys/devices/platform/kcal_ctrl.0/kcal
+    chown root system /sys/devices/platform/kcal_ctrl.0/kcal_ctrl
+    chown root system /sys/devices/platform/mipi_lgit.1537/kgamma_r
+    chown root system /sys/devices/platform/mipi_lgit.1537/kgamma_g
+    chown root system /sys/devices/platform/mipi_lgit.1537/kgamma_b
+    chown root system /sys/devices/platform/mipi_lgit.1537/kgamma_apply
+    chmod 0664 /sys/class/timed_output/vibrator/amp
+    chmod 0664 /sys/devices/platform/kcal_ctrl.0/kcal
+    chmod 0664 /sys/devices/platform/kcal_ctrl.0/kcal_ctrl
+    chmod 0664 /sys/devices/platform/mipi_lgit.1537/kgamma_r
+    chmod 0664 /sys/devices/platform/mipi_lgit.1537/kgamma_g
+    chmod 0664 /sys/devices/platform/mipi_lgit.1537/kgamma_b
+    chmod 0664 /sys/devices/platform/mipi_lgit.1537/kgamma_apply
+    restorecon /sys/class/timed_output/vibrator/amp
+    restorecon /sys/devices/platform/kcal_ctrl.0/kcal
+    restorecon /sys/devices/platform/kcal_ctrl.0/kcal_ctrl
+    restorecon /sys/devices/platform/mipi_lgit.1537/kgamma_r
+    restorecon /sys/devices/platform/mipi_lgit.1537/kgamma_g
+    restorecon /sys/devices/platform/mipi_lgit.1537/kgamma_b
+    restorecon /sys/devices/platform/mipi_lgit.1537/kgamma_apply
 
 on charger
     # Enable Power modes and set the CPU Freq Sampling rates
@@ -287,10 +312,6 @@ on charger
     write /sys/module/pm_8x60/modes/cpu2/power_collapse/suspend_enabled 1
     write /sys/module/pm_8x60/modes/cpu3/power_collapse/suspend_enabled 1
     write /sys/module/pm_8x60/modes/cpu0/power_collapse/idle_enabled 1
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor "powersave"
-    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor "powersave"
-    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor "powersave"
-    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor "powersave"
     write /sys/devices/system/cpu/cpufreq/ondemand/up_threshold 90
     write /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate 50000
     write /sys/devices/system/cpu/cpufreq/ondemand/io_is_busy 1
@@ -459,11 +480,6 @@ service charger /charger
 service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
 
-# Binding fuse mount point to /storage/emulated/legacy
-on property:init.svc.sdcard=running
-    wait /mnt/shell/emulated/0
-    mount none /mnt/shell/emulated/0 /storage/emulated/legacy bind
-
 service thermald /system/bin/thermald
     class main
     group radio
@@ -475,7 +491,7 @@ service ppd /system/bin/mm-pp-daemon
     class late_start
     disabled
     user system
-    socket pps stream 0660 system system
+    socket pps stream 0660 system system graphics
     group system graphics
 
 service qcamerasvr /system/bin/mm-qcamera-daemon
@@ -512,6 +528,11 @@ service qseecomd /system/bin/qseecomd
 service diag_mdlog /system/bin/diag_mdlog -s 100
     class late_start
     disabled
+
+service qrngd /system/bin/qrngd -f
+    class main
+    user root
+    group root
 
 on property:ro.boot.baseband=mdm
     start qmuxd
