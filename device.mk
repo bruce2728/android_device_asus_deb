@@ -15,13 +15,18 @@
 #
 
 # rild
-PRODUCT_PACKAGES := \
-    rild \
-    BasicSmsReceiver
+#PRODUCT_PACKAGES := \
+#    rild \
+#    BasicSmsReceiver
 
 PRODUCT_COPY_FILES := \
     device/asus/deb/fstab.deb:root/fstab.flo \
     device/asus/deb/init.deb.rc:root/init.flo.rc
+
+# These are the hardware-specific features
+PRODUCT_COPY_FILES += \
+	frameworks/native/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml \
+	frameworks/native/data/etc/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml
 
 PRODUCT_PACKAGES += \
 	camera.deb
